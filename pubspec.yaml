@@ -40,7 +40,6 @@ dependencies:
   cloud_functions: ^7.0.1
   audioplayers: ^6.8.1
   google_sign_in: ^7.2.0
-  zego_express_engine: ^3.25.0
   permission_handler: 12.0.3
   livekit_client: ^2.13.1
 
