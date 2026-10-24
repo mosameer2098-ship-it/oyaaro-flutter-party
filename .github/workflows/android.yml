@@ -31,12 +31,24 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Build debug APK
+      - name: Restore release keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/oyaroo-release.jks"
+          chmod 600 "$RUNNER_TEMP/oyaroo-release.jks"
+
+      - name: Build signed ARM64 release APK
+        env:
+          ANDROID_KEYSTORE_FILE: ${{ runner.temp }}/oyaroo-release.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: flutter build apk --release --target-platform android-arm64 --split-per-abi
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: oyaroo-debug-apk
+          name: oyaroo-arm64-release-apk
           path: build/app/outputs/flutter-apk/*-arm64-v8a-release.apk
           if-no-files-found: error
