@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "425159662668",
+    "project_id": "oyaroo-live-2026",
+    "storage_bucket": "oyaroo-live-2026.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:425159662668:android:ca8cef59920fe6c52868e9",
+        "android_client_info": {
+          "package_name": "com.oyaroo.oyaroo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBsdcu82LLh--MaY7V4odEo8MHMou3zJSU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

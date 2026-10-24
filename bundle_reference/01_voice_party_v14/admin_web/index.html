@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="hi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Voice Party - Admin</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Voice Party Admin</h1>
+    <button id="logout" hidden>Logout</button>
+  </header>
+
+  <section id="login">
+    <p>Admin account se login karein (role = admin).</p>
+    <button id="loginBtn">Google se login</button>
+    <p id="loginMsg" class="err"></p>
+  </section>
+
+  <main id="app" hidden>
+    <section class="card">
+      <h2>Full database backup</h2>
+      <p>Poore database ka snapshot Cloud Storage mein save hota hai. Har din raat 3 baje auto backup bhi hota hai.</p>
+      <button id="backupNow">Abhi backup lo</button>
+      <h3>Backups</h3>
+      <table><thead><tr><th>Waqt</th><th>Type</th><th>Path</th><th></th></tr></thead><tbody id="backups"></tbody></table>
+    </section>
+
+    <section class="card">
+      <h2>Users</h2>
+      <input id="search" placeholder="Naam ya User ID se dhoondhein" />
+      <table><thead><tr><th>Naam</th><th>User ID</th><th>Coins</th><th>Role</th><th>Actions</th></tr></thead><tbody id="users"></tbody></table>
+    </section>
+
+    <section class="card">
+      <h2>Agent stock</h2>
+      <input id="agentUid" placeholder="Agent User ID" />
+      <input id="stock" type="number" placeholder="Coins" />
+      <button id="addStock">Stock add karo</button>
+    </section>
+
+    <p id="msg" class="msg"></p>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

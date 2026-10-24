@@ -1,0 +1,5 @@
+# Host app ke pubspec.yaml mein (agar pehle se nahi):
+# dependencies:
+#   cloud_firestore: ^4.13.6
+#   firebase_auth: ^4.15.3
+# Koi naya external package zaroori nahi.

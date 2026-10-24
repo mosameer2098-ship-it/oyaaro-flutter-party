@@ -1,0 +1,19 @@
+// Host firebase/firestore.rules mein ye blocks add karein (service cloud.firestore > match /databases/... ke andar)
+match /wheel_rounds/{roundId} {
+  allow read: if request.auth != null;
+  allow write: if false;
+  match /bets/{uid} {
+    allow read: if request.auth != null;
+    allow write: if false;
+  }
+}
+match /pk/{pkId} {
+  allow read: if request.auth != null;
+  allow write: if false;
+}
+match /music_tracks/{id} {
+  allow read: if request.auth != null;
+  allow write: if false;
+}
+// users doc ke server-only fields (coins, diamonds, ownedThemes, ownedFrames, claimedLevels,
+// equippedRoomTheme, equippedCoupleTheme, role): client update band karein jab server migration complete ho.

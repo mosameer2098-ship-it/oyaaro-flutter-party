@@ -21,6 +21,8 @@ jobs:
         with:
           channel: stable
           cache: true
+      - name: Configure Android Flutter SDK path
+        run: echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
       - name: Install dependencies
         run: flutter pub get
       - name: Analyze Dart code
@@ -45,6 +47,8 @@ jobs:
         with:
           channel: stable
           cache: true
+      - name: Configure Android Flutter SDK path
+        run: echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
 
       - name: Install dependencies
         run: flutter pub get

@@ -1,0 +1,6 @@
+Host functions/index.js mein ye lines hon (agar pehle se nahi):
+  Object.assign(exports, require('./economy'));
+  Object.assign(exports, require('./games_v13'));
+  Object.assign(exports, require('./avatar_frames_functions'));
+  Object.assign(exports, require('./features_v15'));
+Aur ROLES array mein: 'support', 'superadmin', 'bd', 'superbd' add karein.
