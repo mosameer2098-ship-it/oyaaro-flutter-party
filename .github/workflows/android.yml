@@ -10,6 +10,24 @@ permissions:
   contents: read
 
 jobs:
+  test:
+    name: Flutter Analyze and Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Oyaroo
+        uses: actions/checkout@v4
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Analyze Dart code
+        run: flutter analyze
+      - name: Run Flutter tests
+        run: flutter test
+
   build:
     runs-on: ubuntu-latest
     steps:
