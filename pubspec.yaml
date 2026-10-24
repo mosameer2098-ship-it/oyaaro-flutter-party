@@ -41,7 +41,7 @@ dependencies:
   audioplayers: ^6.8.1
   google_sign_in: ^7.2.0
   zego_express_engine: ^3.25.0
-  permission_handler: ^13.0.2
+  permission_handler: 12.0.3
 
 dev_dependencies:
   flutter_test:
@@ -99,3 +99,6 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+dependency_overrides:
+  permission_handler_android: 13.0.0
