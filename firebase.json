@@ -1,0 +1,19 @@
+{
+  "functions": [
+    {
+      "source": "livekit-backend",
+      "codebase": "livekit-backend",
+      "disallowLegacyRuntimeConfig": true,
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ]
+    }
+  ],
+  "firestore": {
+    "rules": "bundle_reference/01_voice_party_v14/firebase/firestore.rules"
+  }
+}

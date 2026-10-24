@@ -1,8 +1,6 @@
-import 'package:oyaroo/core/brand.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:oyaroo/core/catalog.dart';
 import 'package:oyaroo/core/gift_catalog.dart';
 import 'package:oyaroo/helpers/gift_helper.dart';
 import 'package:oyaroo/screens/gift_sheet.dart';
@@ -96,7 +94,11 @@ class _RoomScreenState extends State<RoomScreen> {
     if (mounted) showFailure(context, r);
   }
 
-  Future<void> _onSeatTap(int index, Map<String, dynamic> seat, bool isHost) async {
+  Future<void> _onSeatTap(
+    int index,
+    Map<String, dynamic> seat,
+    bool isHost,
+  ) async {
     if (seat['uid'] == _uid && index > 0) {
       await _mic.stopPublishing();
       await _do(() => _seat.leave(widget.roomId));
@@ -203,7 +205,11 @@ class _RoomScreenState extends State<RoomScreen> {
         onPick: (g) {
           Navigator.pop(sheetCtx);
           Navigator.push(
-              context, MaterialPageRoute(builder: (_) => GameScreen(game: g, roomId: widget.roomId)));
+            context,
+            MaterialPageRoute(
+              builder: (_) => GameScreen(game: g, roomId: widget.roomId),
+            ),
+          );
         },
       ),
     );
@@ -213,8 +219,12 @@ class _RoomScreenState extends State<RoomScreen> {
     final r = await _spin.spin();
     if (!mounted) return;
     if (r is Ok<int>) {
-      showMessage(context,
-          r.value == 0 ? 'Is baar koi prize nahi mila' : 'Aapne ${r.value} coins jeete!');
+      showMessage(
+        context,
+        r.value == 0
+            ? 'Is baar koi prize nahi mila'
+            : 'Aapne ${r.value} coins jeete!',
+      );
     } else {
       showFailure(context, r);
     }
@@ -233,45 +243,57 @@ class _RoomScreenState extends State<RoomScreen> {
   // Naye messages dekhta hai: rocket ya VIP entry ho to animation chalata hai
   // (pehli baar load par purane events ka animation nahi chalta)
   Widget _eventFeed() => StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: _msgStream,
-        builder: (context, snap) {
-          if (snap.hasData && snap.data!.docs.isNotEmpty) {
-            final newest = snap.data!.docs.first;
-            if (!_bootstrapped) {
-              _bootstrapped = true;
-              _seenMsgId = newest.id;
-            } else if (newest.id != _seenMsgId) {
-              _seenMsgId = newest.id;
-              final m = newest.data();
-              final who = '${m['name'] ?? ''}';
-              if (m['type'] == 'rocket') {
-                final spec = Rockets.byId('${m['text']}');
-                if (spec != null) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (mounted) setState(() { _launch = spec; _eventBy = who; });
+    stream: _msgStream,
+    builder: (context, snap) {
+      if (snap.hasData && snap.data!.docs.isNotEmpty) {
+        final newest = snap.data!.docs.first;
+        if (!_bootstrapped) {
+          _bootstrapped = true;
+          _seenMsgId = newest.id;
+        } else if (newest.id != _seenMsgId) {
+          _seenMsgId = newest.id;
+          final m = newest.data();
+          final who = '${m['name'] ?? ''}';
+          if (m['type'] == 'rocket') {
+            final spec = Rockets.byId('${m['text']}');
+            if (spec != null) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted)
+                  setState(() {
+                    _launch = spec;
+                    _eventBy = who;
                   });
-                }
-              } else if (m['type'] == 'gift') {
-                final spec = GiftHelper.find('${m['text']}');
-                if (spec != null) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (mounted) setState(() { _gift = spec; _eventBy = who; });
+              });
+            }
+          } else if (m['type'] == 'gift') {
+            final spec = GiftHelper.find('${m['text']}');
+            if (spec != null) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted)
+                  setState(() {
+                    _gift = spec;
+                    _eventBy = who;
                   });
-                }
-              } else if (m['type'] == 'entry') {
-                final n = int.tryParse('${m['text']}'.replaceAll('VIP', ''));
-                if (n != null && n >= 1 && n <= Vip.all.length) {
-                  final tier = Vip.byLevel(n);
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (mounted) setState(() { _entry = tier; _eventBy = who; });
+              });
+            }
+          } else if (m['type'] == 'entry') {
+            final n = int.tryParse('${m['text']}'.replaceAll('VIP', ''));
+            if (n != null && n >= 1 && n <= Vip.all.length) {
+              final tier = Vip.byLevel(n);
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted)
+                  setState(() {
+                    _entry = tier;
+                    _eventBy = who;
                   });
-                }
-              }
+              });
             }
           }
-          return const SizedBox.shrink();
-        },
-      );
+        }
+      }
+      return const SizedBox.shrink();
+    },
+  );
 
   Future<void> _claimBag(String bagId) async {
     final r = await _bag.claim(bagId);
@@ -308,8 +330,10 @@ class _RoomScreenState extends State<RoomScreen> {
             ),
             if (occupied) Icon(muted ? Icons.mic_off : Icons.mic, size: 14),
             if (index == 0)
-              const Text('Host',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+              const Text(
+                'Host',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+              ),
           ],
         ),
       ),
@@ -317,83 +341,89 @@ class _RoomScreenState extends State<RoomScreen> {
   }
 
   Widget _toolbar() => Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          TextButton.icon(
-              onPressed: _showGifts,
-              icon: const Icon(Icons.card_giftcard),
-              label: const Text('Gift')),
-          TextButton.icon(
-              onPressed: _showRockets,
-              icon: const Icon(Icons.rocket_launch),
-              label: const Text('Rocket')),
-          TextButton.icon(
-              onPressed: _showGames,
-              icon: const Icon(Icons.sports_esports),
-              label: const Text('Games')),
-          TextButton.icon(
-              onPressed: _spinNow,
-              icon: const Icon(Icons.casino),
-              label: const Text('Spin')),
-        ],
-      );
+    mainAxisAlignment: MainAxisAlignment.spaceAround,
+    children: [
+      TextButton.icon(
+        onPressed: _showGifts,
+        icon: const Icon(Icons.card_giftcard),
+        label: const Text('Gift'),
+      ),
+      TextButton.icon(
+        onPressed: _showRockets,
+        icon: const Icon(Icons.rocket_launch),
+        label: const Text('Rocket'),
+      ),
+      TextButton.icon(
+        onPressed: _showGames,
+        icon: const Icon(Icons.sports_esports),
+        label: const Text('Games'),
+      ),
+      TextButton.icon(
+        onPressed: _spinNow,
+        icon: const Icon(Icons.casino),
+        label: const Text('Spin'),
+      ),
+    ],
+  );
 
   Widget _chatPanel() => Column(
-        children: [
-          Expanded(
-            child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-              stream: _msgStream,
-              builder: (context, snap) {
-                if (!snap.hasData) return const SizedBox();
-                final docs = snap.data!.docs;
-                return ListView.builder(
-                  reverse: true,
-                  itemCount: docs.length,
-                  itemBuilder: (_, i) {
-                    final m = docs[i].data();
-                    final type = m['type'];
-                    final String line;
-                    if (type == 'gift') {
-                      line = 'Gift bheja: ${m['text']}';
-                    } else if (type == 'rocket') {
-                      final spec = Rockets.byId('${m['text']}');
-                      line = 'Rocket launch: ${spec?.name ?? ''}';
-                    } else if (type == 'bag') {
-                      line = 'Lucky Bag bheja. Claim karne ke liye tap karein';
-                    } else if (type == 'entry') {
-                      line = 'Room mein aaye (${m['text']})';
-                    } else {
-                      line = '${m['text'] ?? ''}';
-                    }
-                    return ListTile(
-                      dense: true,
-                      title: Text('${m['name'] ?? ''}'),
-                      subtitle: Text(line),
-                      onTap: type == 'bag' ? () => _claimBag('${m['text']}') : null,
-                    );
-                  },
+    children: [
+      Expanded(
+        child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+          stream: _msgStream,
+          builder: (context, snap) {
+            if (!snap.hasData) return const SizedBox();
+            final docs = snap.data!.docs;
+            return ListView.builder(
+              reverse: true,
+              itemCount: docs.length,
+              itemBuilder: (_, i) {
+                final m = docs[i].data();
+                final type = m['type'];
+                final String line;
+                if (type == 'gift') {
+                  line = 'Gift bheja: ${m['text']}';
+                } else if (type == 'rocket') {
+                  final spec = Rockets.byId('${m['text']}');
+                  line = 'Rocket launch: ${spec?.name ?? ''}';
+                } else if (type == 'bag') {
+                  line = 'Lucky Bag bheja. Claim karne ke liye tap karein';
+                } else if (type == 'entry') {
+                  line = 'Room mein aaye (${m['text']})';
+                } else {
+                  line = '${m['text'] ?? ''}';
+                }
+                return ListTile(
+                  dense: true,
+                  title: Text('${m['name'] ?? ''}'),
+                  subtitle: Text(line),
+                  onTap: type == 'bag' ? () => _claimBag('${m['text']}') : null,
                 );
               },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _chatCtrl,
-                    decoration: const InputDecoration(
-                        hintText: 'Message likho', isDense: true),
-                    onSubmitted: (_) => _sendChat(),
-                  ),
+            );
+          },
+        ),
+      ),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _chatCtrl,
+                decoration: const InputDecoration(
+                  hintText: 'Message likho',
+                  isDense: true,
                 ),
-                IconButton(icon: const Icon(Icons.send), onPressed: _sendChat),
-              ],
+                onSubmitted: (_) => _sendChat(),
+              ),
             ),
-          ),
-        ],
-      );
+            IconButton(icon: const Icon(Icons.send), onPressed: _sendChat),
+          ],
+        ),
+      ),
+    ],
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -402,7 +432,9 @@ class _RoomScreenState extends State<RoomScreen> {
       builder: (context, snap) {
         final data = snap.data?.data();
         if (data == null) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
         }
         final isHost = data['hostUid'] == _uid;
         final count = data['seatCount'] as int;
@@ -425,8 +457,10 @@ class _RoomScreenState extends State<RoomScreen> {
                   onPressed: () => Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) =>
-                          RoomSettingsScreen(roomId: widget.roomId, current: count),
+                      builder: (_) => RoomSettingsScreen(
+                        roomId: widget.roomId,
+                        current: count,
+                      ),
                     ),
                   ),
                 ),
@@ -453,7 +487,8 @@ class _RoomScreenState extends State<RoomScreen> {
                         mainAxisSpacing: 10,
                         crossAxisSpacing: 10,
                         children: [
-                          for (var i = 1; i < count; i++) _seatCard(i, seats[i], isHost),
+                          for (var i = 1; i < count; i++)
+                            _seatCard(i, seats[i], isHost),
                         ],
                       ),
                     ),

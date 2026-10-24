@@ -42,6 +42,7 @@ dependencies:
   google_sign_in: ^7.2.0
   zego_express_engine: ^3.25.0
   permission_handler: 12.0.3
+  livekit_client: ^2.13.1
 
 dev_dependencies:
   flutter_test:
