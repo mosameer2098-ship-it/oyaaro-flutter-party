@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:oyaroo/core/gift_catalog.dart';
 import 'package:oyaroo/helpers/gift_helper.dart';
 import 'package:oyaroo/screens/gift_sheet.dart';
@@ -73,6 +76,18 @@ class _RoomScreenState extends State<RoomScreen> {
     if (!mounted) return;
     showFailure(context, j);
     if (j is Ok<void>) {
+      if (FirebaseAuth.instance.currentUser?.uid != null) {
+        try {
+          await RoomService.ensureRoomCapacity(widget.roomId);
+        } catch (error) {
+          debugPrint('Oyaroo room capacity migration failed: $error');
+        }
+      }
+      try {
+        await RoomService.recordRoomVisit(widget.roomId);
+      } catch (error) {
+        debugPrint('Oyaroo room visit/presence save failed: $error');
+      }
       final vip = await Result.guard(() => UserService.myVip());
       if (vip is Ok<int>) {
         await _roomH.announceEntry(widget.roomId, _name, vip.value);
@@ -85,6 +100,11 @@ class _RoomScreenState extends State<RoomScreen> {
   void dispose() {
     _chatCtrl.dispose();
     _seat.leave(widget.roomId);
+    unawaited(
+      RoomService.clearCurrentRoom(widget.roomId).catchError((Object error) {
+        debugPrint('Oyaroo room presence cleanup failed: $error');
+      }),
+    );
     _mic.dispose();
     super.dispose();
   }
@@ -308,31 +328,83 @@ class _RoomScreenState extends State<RoomScreen> {
   Widget _seatCard(int index, Map<String, dynamic> seat, bool isHost) {
     final occupied = seat['uid'] != null;
     final muted = seat['muted'] == true;
+    final isOwner = index == 0;
+    final isSuperMic = index == 1;
+    final accent = isOwner
+        ? const Color(0xFFB8860B)
+        : isSuperMic
+        ? const Color(0xFFB45BC8)
+        : const Color(0xFF6575A8);
+
     return GestureDetector(
       onTap: () => _onSeatTap(index, seat, isHost),
       child: Container(
+        constraints: const BoxConstraints(minHeight: 96),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
         decoration: BoxDecoration(
-          color: occupied ? Colors.deepPurple.shade100 : Colors.grey.shade200,
+          color: occupied ? Colors.white : const Color(0xFFF5F6FA),
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: occupied ? accent : const Color(0xFFE1E4EC),
+            width: isOwner || isSuperMic ? 1.8 : 1,
+          ),
+          boxShadow: [
+            if (isOwner || isSuperMic)
+              BoxShadow(
+                color: accent.withValues(alpha: 0.10),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+          ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
+            if (isOwner || isSuperMic)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 5),
+                child: Text(
+                  isOwner ? 'OWNER' : 'SUPER MIC',
+                  style: TextStyle(
+                    color: accent,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.7,
+                  ),
+                ),
+              ),
             CircleAvatar(
-              radius: index == 0 ? 30 : 22,
-              child: Icon(occupied ? Icons.person : Icons.event_seat),
+              radius: isOwner || isSuperMic ? 25 : 21,
+              backgroundColor: accent.withValues(alpha: 0.12),
+              child: Icon(
+                occupied
+                    ? (isOwner ? Icons.workspace_premium : Icons.person)
+                    : Icons.event_seat,
+                color: accent,
+                size: isOwner || isSuperMic ? 27 : 23,
+              ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 6),
             Text(
-              occupied ? '${seat['name'] ?? ''}' : 'Khali',
+              occupied ? '${seat['name'] ?? 'User'}' : 'Khali',
+              maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 12),
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Color(0xFF252A3A),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-            if (occupied) Icon(muted ? Icons.mic_off : Icons.mic, size: 14),
-            if (index == 0)
-              const Text(
-                'Host',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            if (occupied && !isOwner)
+              Padding(
+                padding: const EdgeInsets.only(top: 3),
+                child: Icon(
+                  muted ? Icons.mic_off : Icons.mic,
+                  size: 15,
+                  color: muted ? Colors.redAccent : Colors.green.shade700,
+                ),
               ),
           ],
         ),
@@ -340,30 +412,38 @@ class _RoomScreenState extends State<RoomScreen> {
     );
   }
 
-  Widget _toolbar() => Row(
-    mainAxisAlignment: MainAxisAlignment.spaceAround,
-    children: [
-      TextButton.icon(
-        onPressed: _showGifts,
-        icon: const Icon(Icons.card_giftcard),
-        label: const Text('Gift'),
-      ),
-      TextButton.icon(
-        onPressed: _showRockets,
-        icon: const Icon(Icons.rocket_launch),
-        label: const Text('Rocket'),
-      ),
-      TextButton.icon(
-        onPressed: _showGames,
-        icon: const Icon(Icons.sports_esports),
-        label: const Text('Games'),
-      ),
-      TextButton.icon(
-        onPressed: _spinNow,
-        icon: const Icon(Icons.casino),
-        label: const Text('Spin'),
-      ),
-    ],
+  Widget _toolbar() => SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        IconButton(
+          tooltip: _mic.micOn ? 'Mute microphone' : 'Unmute microphone',
+          onPressed: _toggleMic,
+          icon: Icon(_mic.micOn ? Icons.mic : Icons.mic_off),
+        ),
+        TextButton.icon(
+          onPressed: _showGifts,
+          icon: const Icon(Icons.card_giftcard),
+          label: const Text('Gift'),
+        ),
+        TextButton.icon(
+          onPressed: _showRockets,
+          icon: const Icon(Icons.rocket_launch),
+          label: const Text('Rocket'),
+        ),
+        TextButton.icon(
+          onPressed: _showGames,
+          icon: const Icon(Icons.sports_esports),
+          label: const Text('Games'),
+        ),
+        TextButton.icon(
+          onPressed: _spinNow,
+          icon: const Icon(Icons.casino),
+          label: const Text('Spin'),
+        ),
+      ],
+    ),
   );
 
   Widget _chatPanel() => Column(
@@ -445,15 +525,74 @@ class _RoomScreenState extends State<RoomScreen> {
 
         return Scaffold(
           appBar: AppBar(
-            title: Text('${data['name'] ?? 'Room'}'),
+            automaticallyImplyLeading: false,
+            titleSpacing: 12,
+            title: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE9EAF5),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.groups_rounded,
+                    color: Color(0xFF5966A8),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '${data['name'] ?? 'Room'}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      Text(
+                        'ID: ${widget.roomId}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
             actions: [
               IconButton(
-                icon: Icon(_mic.micOn ? Icons.mic : Icons.mic_off),
-                onPressed: _toggleMic,
+                tooltip: 'Copy room details',
+                icon: const Icon(Icons.share_outlined),
+                onPressed: () async {
+                  await Clipboard.setData(
+                    ClipboardData(
+                      text:
+                          'Oyaroo Room: ${data['name'] ?? 'Room'}\n'
+                          'Room ID: ${widget.roomId}',
+                    ),
+                  );
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Room details copied')),
+                    );
+                  }
+                },
               ),
               if (isHost)
                 IconButton(
-                  icon: const Icon(Icons.settings),
+                  tooltip: 'Room settings',
+                  icon: const Icon(Icons.settings_outlined),
                   onPressed: () => Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -464,38 +603,130 @@ class _RoomScreenState extends State<RoomScreen> {
                     ),
                   ),
                 ),
+              IconButton(
+                tooltip: 'Exit room',
+                icon: const Icon(Icons.close_rounded),
+                onPressed: () => Navigator.maybePop(context),
+              ),
             ],
           ),
           body: Stack(
             children: [
               Positioned.fill(
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: SizedBox(
-                        width: 140,
-                        height: 140,
-                        child: _seatCard(0, seats[0], isHost),
-                      ),
+                child: DecoratedBox(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Color(0xFFF8F9FD), Color(0xFFF0F2F9)],
                     ),
-                    Expanded(
-                      flex: 3,
-                      child: GridView.count(
-                        crossAxisCount: 3,
-                        padding: const EdgeInsets.all(12),
-                        mainAxisSpacing: 10,
-                        crossAxisSpacing: 10,
-                        children: [
-                          for (var i = 1; i < count; i++)
-                            _seatCard(i, seats[i], isHost),
-                        ],
+                  ),
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 9,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: Color(0xFFE5E8F1)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.campaign_outlined,
+                                color: Color(0xFF6575A8),
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Welcome to ${data['name'] ?? 'Oyaroo Room'} • '
+                                  'Respect everyone and keep the room friendly.',
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: Color(0xFF3B4052),
+                                    fontSize: 11,
+                                    height: 1.25,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              const Icon(
+                                Icons.favorite_border,
+                                size: 17,
+                                color: Color(0xFFB45BC8),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                    _toolbar(),
-                    const Divider(height: 1),
-                    Expanded(flex: 2, child: _chatPanel()),
-                  ],
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Expanded(
+                              child: SizedBox(
+                                height: 142,
+                                child: _seatCard(0, seats[0], isHost),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: SizedBox(
+                                height: 142,
+                                child: _seatCard(
+                                  1,
+                                  seats.length > 1
+                                      ? seats[1]
+                                      : <String, dynamic>{
+                                          'uid': null,
+                                          'name': null,
+                                          'muted': true,
+                                        },
+                                  isHost,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        flex: 3,
+                        child: GridView.count(
+                          crossAxisCount: 3,
+                          padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+                          mainAxisSpacing: 9,
+                          crossAxisSpacing: 9,
+                          childAspectRatio: 0.92,
+                          children: [
+                            for (var i = 2; i < 14; i++)
+                              _seatCard(
+                                i,
+                                i < seats.length
+                                    ? seats[i]
+                                    : <String, dynamic>{
+                                        'uid': null,
+                                        'name': null,
+                                        'muted': true,
+                                      },
+                                isHost,
+                              ),
+                          ],
+                        ),
+                      ),
+                      _toolbar(),
+                      const Divider(height: 1),
+                      Expanded(flex: 2, child: _chatPanel()),
+                    ],
+                  ),
                 ),
               ),
               _eventFeed(),

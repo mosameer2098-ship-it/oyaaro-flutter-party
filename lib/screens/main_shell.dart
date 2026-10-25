@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:oyaroo/handlers/profile_handler.dart';
 import 'package:oyaroo/screens/dashboard_screen.dart';
-import 'package:oyaroo/screens/me_screen.dart';
+import 'package:oyaroo/screens/mine_screen.dart';
 import 'package:oyaroo/screens/message_screen.dart';
 import 'package:oyaroo/screens/room_screen.dart';
 import 'package:oyaroo/features/discover/data/firestore_discover_repository.dart';
@@ -23,11 +23,14 @@ class _MainShellState extends State<MainShell> {
   void initState() {
     super.initState();
     _presence = PresenceHeartbeat();
-    ProfileHandler().ensureUser().then((_) {
-      if (mounted) _presence.start();
-    }).catchError((Object error) {
-      debugPrint('Oyaroo profile initialization failed: $error');
-    });
+    ProfileHandler()
+        .ensureUser()
+        .then((_) {
+          if (mounted) _presence.start();
+        })
+        .catchError((Object error) {
+          debugPrint('Oyaroo profile initialization failed: $error');
+        });
   }
 
   void _openRoom(String id) {
@@ -55,7 +58,7 @@ class _MainShellState extends State<MainShell> {
             repository: FirestoreDiscoverRepository(),
             onJoinRoom: _openRoom,
           ),
-          const MeScreen(),
+          const MineScreen(),
         ],
       ),
       bottomNavigationBar: NavigationBar(
@@ -80,7 +83,7 @@ class _MainShellState extends State<MainShell> {
           NavigationDestination(
             icon: Icon(Icons.person_outline),
             selectedIcon: Icon(Icons.person),
-            label: 'Me',
+            label: 'Mine',
           ),
         ],
       ),
