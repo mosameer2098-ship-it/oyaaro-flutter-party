@@ -3,6 +3,8 @@ import 'package:oyaroo/core/result.dart';
 import 'package:oyaroo/core/ui.dart';
 import 'package:oyaroo/handlers/auth_handler.dart';
 
+import '../core/country_data.dart';
+
 const _cream = Color(0xFFFFF8EF);
 const _gold = Color(0xFFD9A52E);
 const _darkGold = Color(0xFF795515);
@@ -59,92 +61,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  static const List<Map<String, String>> _countries = [
-    {'name': 'India', 'flag': '🇮🇳', 'code': '+91'},
-    {'name': 'United States', 'flag': '🇺🇸', 'code': '+1'},
-    {'name': 'United Kingdom', 'flag': '🇬🇧', 'code': '+44'},
-    {'name': 'United Arab Emirates', 'flag': '🇦🇪', 'code': '+971'},
-    {'name': 'Saudi Arabia', 'flag': '🇸🇦', 'code': '+966'},
-    {'name': 'Pakistan', 'flag': '🇵🇰', 'code': '+92'},
-    {'name': 'Bangladesh', 'flag': '🇧🇩', 'code': '+880'},
-    {'name': 'Nepal', 'flag': '🇳🇵', 'code': '+977'},
-    {'name': 'Sri Lanka', 'flag': '🇱🇰', 'code': '+94'},
-    {'name': 'Canada', 'flag': '🇨🇦', 'code': '+1'},
-    {'name': 'Australia', 'flag': '🇦🇺', 'code': '+61'},
-    {'name': 'New Zealand', 'flag': '🇳🇿', 'code': '+64'},
-    {'name': 'Singapore', 'flag': '🇸🇬', 'code': '+65'},
-    {'name': 'Malaysia', 'flag': '🇲🇾', 'code': '+60'},
-    {'name': 'Indonesia', 'flag': '🇮🇩', 'code': '+62'},
-    {'name': 'Philippines', 'flag': '🇵🇭', 'code': '+63'},
-    {'name': 'Thailand', 'flag': '🇹🇭', 'code': '+66'},
-    {'name': 'Vietnam', 'flag': '🇻🇳', 'code': '+84'},
-    {'name': 'China', 'flag': '🇨🇳', 'code': '+86'},
-    {'name': 'Japan', 'flag': '🇯🇵', 'code': '+81'},
-    {'name': 'South Korea', 'flag': '🇰🇷', 'code': '+82'},
-    {'name': 'Turkey', 'flag': '🇹🇷', 'code': '+90'},
-    {'name': 'Germany', 'flag': '🇩🇪', 'code': '+49'},
-    {'name': 'France', 'flag': '🇫🇷', 'code': '+33'},
-    {'name': 'Italy', 'flag': '🇮🇹', 'code': '+39'},
-    {'name': 'Spain', 'flag': '🇪🇸', 'code': '+34'},
-    {'name': 'Netherlands', 'flag': '🇳🇱', 'code': '+31'},
-    {'name': 'Switzerland', 'flag': '🇨🇭', 'code': '+41'},
-    {'name': 'Sweden', 'flag': '🇸🇪', 'code': '+46'},
-    {'name': 'Norway', 'flag': '🇳🇴', 'code': '+47'},
-    {'name': 'Ireland', 'flag': '🇮🇪', 'code': '+353'},
-    {'name': 'Portugal', 'flag': '🇵🇹', 'code': '+351'},
-    {'name': 'Greece', 'flag': '🇬🇷', 'code': '+30'},
-    {'name': 'Poland', 'flag': '🇵🇱', 'code': '+48'},
-    {'name': 'Ukraine', 'flag': '🇺🇦', 'code': '+380'},
-    {'name': 'Russia', 'flag': '🇷🇺', 'code': '+7'},
-    {'name': 'South Africa', 'flag': '🇿🇦', 'code': '+27'},
-    {'name': 'Nigeria', 'flag': '🇳🇬', 'code': '+234'},
-    {'name': 'Kenya', 'flag': '🇰🇪', 'code': '+254'},
-    {'name': 'Egypt', 'flag': '🇪🇬', 'code': '+20'},
-    {'name': 'Morocco', 'flag': '🇲🇦', 'code': '+212'},
-    {'name': 'Ghana', 'flag': '🇬🇭', 'code': '+233'},
-    {'name': 'Brazil', 'flag': '🇧🇷', 'code': '+55'},
-    {'name': 'Mexico', 'flag': '🇲🇽', 'code': '+52'},
-    {'name': 'Argentina', 'flag': '🇦🇷', 'code': '+54'},
-    {'name': 'Chile', 'flag': '🇨🇱', 'code': '+56'},
-    {'name': 'Colombia', 'flag': '🇨🇴', 'code': '+57'},
-    {'name': 'Peru', 'flag': '🇵🇪', 'code': '+51'},
-    {'name': 'Israel', 'flag': '🇮🇱', 'code': '+972'},
-    {'name': 'Qatar', 'flag': '🇶🇦', 'code': '+974'},
-    {'name': 'Kuwait', 'flag': '🇰🇼', 'code': '+965'},
-    {'name': 'Oman', 'flag': '🇴🇲', 'code': '+968'},
-    {'name': 'Bahrain', 'flag': '🇧🇭', 'code': '+973'},
-    {'name': 'Jordan', 'flag': '🇯🇴', 'code': '+962'},
-    {'name': 'Afghanistan', 'flag': '🇦🇫', 'code': '+93'},
-    {'name': 'Iran', 'flag': '🇮🇷', 'code': '+98'},
-    {'name': 'Hong Kong', 'flag': '🇭🇰', 'code': '+852'},
-    {'name': 'Taiwan', 'flag': '🇹🇼', 'code': '+886'},
-    {'name': 'Myanmar', 'flag': '🇲🇲', 'code': '+95'},
-    {'name': 'Cambodia', 'flag': '🇰🇭', 'code': '+855'},
-    {'name': 'Ethiopia', 'flag': '🇪🇹', 'code': '+251'},
-    {'name': 'Tanzania', 'flag': '🇹🇿', 'code': '+255'},
-    {'name': 'Uganda', 'flag': '🇺🇬', 'code': '+256'},
-    {'name': 'Algeria', 'flag': '🇩🇿', 'code': '+213'},
-    {'name': 'Tunisia', 'flag': '🇹🇳', 'code': '+216'},
-    {'name': 'Iceland', 'flag': '🇮🇸', 'code': '+354'},
-    {'name': 'Finland', 'flag': '🇫🇮', 'code': '+358'},
-    {'name': 'Austria', 'flag': '🇦🇹', 'code': '+43'},
-    {'name': 'Belgium', 'flag': '🇧🇪', 'code': '+32'},
-    {'name': 'Czechia', 'flag': '🇨🇿', 'code': '+420'},
-    {'name': 'Romania', 'flag': '🇷🇴', 'code': '+40'},
-    {'name': 'Hungary', 'flag': '🇭🇺', 'code': '+36'},
-    {'name': 'Croatia', 'flag': '🇭🇷', 'code': '+385'},
-    {'name': 'Serbia', 'flag': '🇷🇸', 'code': '+381'},
-    {'name': 'Kazakhstan', 'flag': '🇰🇿', 'code': '+7'},
-    {'name': 'Uzbekistan', 'flag': '🇺🇿', 'code': '+998'},
-    {'name': 'Georgia', 'flag': '🇬🇪', 'code': '+995'},
-    {'name': 'Armenia', 'flag': '🇦🇲', 'code': '+374'},
-    {'name': 'Azerbaijan', 'flag': '🇦🇿', 'code': '+994'},
-    {'name': 'Maldives', 'flag': '🇲🇻', 'code': '+960'},
-    {'name': 'Bhutan', 'flag': '🇧🇹', 'code': '+975'},
-    {'name': 'Mauritius', 'flag': '🇲🇺', 'code': '+230'},
-    {'name': 'Fiji', 'flag': '🇫🇯', 'code': '+679'},
-  ];
-
   Future<void> _showCountryPicker() async {
     final searchController = TextEditingController();
     final selected = await showModalBottomSheet<Map<String, String>>(
@@ -157,7 +73,7 @@ class _LoginScreenState extends State<LoginScreen> {
       builder: (sheetContext) => StatefulBuilder(
         builder: (context, setSheetState) {
           final query = searchController.text.trim().toLowerCase();
-          final filtered = _countries.where((country) {
+          final filtered = oyarooCountries.where((country) {
             return country['name']!.toLowerCase().contains(query) ||
                 country['code']!.toLowerCase().contains(query);
           }).toList();

@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:oyaroo/core/catalog.dart';
+
 import 'dart:math';
 
 class UserService {
@@ -13,7 +16,9 @@ class UserService {
       final match = await _users.where('shortId', isEqualTo: id).limit(1).get();
       if (match.docs.isEmpty) return id;
     }
-    throw StateError('Unique user ID generate nahi ho payi. Dobara try karein.');
+    throw StateError(
+      'Unique user ID generate nahi ho payi. Dobara try karein.',
+    );
   }
 
   static Future<void> ensureUser() async {
@@ -27,7 +32,9 @@ class UserService {
     final existingName = (data['name'] as String?)?.trim() ?? '';
     final name = existingName.isNotEmpty
         ? existingName
-        : (displayName.isNotEmpty ? displayName : 'User ${u.uid.substring(0, 5)}');
+        : (displayName.isNotEmpty
+              ? displayName
+              : 'User ${u.uid.substring(0, 5)}');
 
     final updates = <String, dynamic>{};
     if (!snap.exists) {
@@ -40,6 +47,7 @@ class UserService {
         'claimedLevels': <int>[],
         'equippedFrame': null,
         'familyId': null,
+        'profileCompleted': false,
         'createdAt': FieldValue.serverTimestamp(),
       });
     }
@@ -59,6 +67,36 @@ class UserService {
     }
   }
 
+  static Future<void> completeProfile({
+    required String name,
+    required String gender,
+    required String country,
+    File? photo,
+  }) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw StateError('Login session nahi mili. Dobara login karein.');
+    }
+
+    final cleanName = name.trim();
+    if (cleanName.length < 2 || cleanName.length > 30) {
+      throw ArgumentError('Naam 2 se 30 characters ka hona chahiye.');
+    }
+    if (gender.trim().isEmpty || country.trim().isEmpty) {
+      throw ArgumentError('Gender aur country required hain.');
+    }
+
+    final userRef = _users.doc(user.uid);
+    await userRef.set({
+      'name': cleanName,
+      'nameLower': cleanName.toLowerCase(),
+      'gender': gender,
+      'country': country,
+      'profileCompleted': true,
+      'profileCompletedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
   static Future<String> myName() async {
     final u = FirebaseAuth.instance.currentUser!;
     final snap = await _users.doc(u.uid).get();
@@ -71,13 +109,16 @@ class UserService {
     return (snap.data()?['vip'] ?? 0) as int;
   }
 
-  static Stream<DocumentSnapshot<Map<String, dynamic>>> profileStream(String uid) =>
-      _users.doc(uid).snapshots();
+  static Stream<DocumentSnapshot<Map<String, dynamic>>> profileStream(
+    String uid,
+  ) => _users.doc(uid).snapshots();
 
-  static Future<void> updateProfile({required String name, required String bio}) =>
-      _users.doc(FirebaseAuth.instance.currentUser!.uid).update({
-        'name': name,
-        'nameLower': name.trim().toLowerCase(),
-        'bio': bio,
-      });
+  static Future<void> updateProfile({
+    required String name,
+    required String bio,
+  }) => _users.doc(FirebaseAuth.instance.currentUser!.uid).update({
+    'name': name,
+    'nameLower': name.trim().toLowerCase(),
+    'bio': bio,
+  });
 }
