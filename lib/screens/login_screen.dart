@@ -21,6 +21,9 @@ class _LoginScreenState extends State<LoginScreen> {
   final _otp = TextEditingController();
   String? _verificationId;
   bool _busy = false;
+  bool _agreedToTerms = false;
+  String _countryCode = '+91';
+  String _countryFlag = '🇮🇳';
 
   Future<void> _run(Future<Result<void>> Function() action) async {
     setState(() => _busy = true);
@@ -35,17 +38,218 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<void> _sendOtp() => _run(
-    () => _auth.sendOtp(
-      _phone.text.trim(),
-      onCodeSent: (id) {
-        if (mounted) setState(() => _verificationId = id);
-      },
-      onError: (msg) {
-        if (mounted) showMessage(context, msg);
-      },
-    ),
-  );
+  Future<void> _sendOtp() {
+    if (!_agreedToTerms) {
+      showMessage(
+        context,
+        'Please agree to the Terms of Service and Privacy Policy.',
+      );
+      return Future.value();
+    }
+    return _run(
+      () => _auth.sendOtp(
+        '$_countryCode${_phone.text.trim().replaceAll(RegExp(r'[^0-9]'), '')}',
+        onCodeSent: (id) {
+          if (mounted) setState(() => _verificationId = id);
+        },
+        onError: (msg) {
+          if (mounted) showMessage(context, msg);
+        },
+      ),
+    );
+  }
+
+  static const List<Map<String, String>> _countries = [
+    {'name': 'India', 'flag': '🇮🇳', 'code': '+91'},
+    {'name': 'United States', 'flag': '🇺🇸', 'code': '+1'},
+    {'name': 'United Kingdom', 'flag': '🇬🇧', 'code': '+44'},
+    {'name': 'United Arab Emirates', 'flag': '🇦🇪', 'code': '+971'},
+    {'name': 'Saudi Arabia', 'flag': '🇸🇦', 'code': '+966'},
+    {'name': 'Pakistan', 'flag': '🇵🇰', 'code': '+92'},
+    {'name': 'Bangladesh', 'flag': '🇧🇩', 'code': '+880'},
+    {'name': 'Nepal', 'flag': '🇳🇵', 'code': '+977'},
+    {'name': 'Sri Lanka', 'flag': '🇱🇰', 'code': '+94'},
+    {'name': 'Canada', 'flag': '🇨🇦', 'code': '+1'},
+    {'name': 'Australia', 'flag': '🇦🇺', 'code': '+61'},
+    {'name': 'New Zealand', 'flag': '🇳🇿', 'code': '+64'},
+    {'name': 'Singapore', 'flag': '🇸🇬', 'code': '+65'},
+    {'name': 'Malaysia', 'flag': '🇲🇾', 'code': '+60'},
+    {'name': 'Indonesia', 'flag': '🇮🇩', 'code': '+62'},
+    {'name': 'Philippines', 'flag': '🇵🇭', 'code': '+63'},
+    {'name': 'Thailand', 'flag': '🇹🇭', 'code': '+66'},
+    {'name': 'Vietnam', 'flag': '🇻🇳', 'code': '+84'},
+    {'name': 'China', 'flag': '🇨🇳', 'code': '+86'},
+    {'name': 'Japan', 'flag': '🇯🇵', 'code': '+81'},
+    {'name': 'South Korea', 'flag': '🇰🇷', 'code': '+82'},
+    {'name': 'Turkey', 'flag': '🇹🇷', 'code': '+90'},
+    {'name': 'Germany', 'flag': '🇩🇪', 'code': '+49'},
+    {'name': 'France', 'flag': '🇫🇷', 'code': '+33'},
+    {'name': 'Italy', 'flag': '🇮🇹', 'code': '+39'},
+    {'name': 'Spain', 'flag': '🇪🇸', 'code': '+34'},
+    {'name': 'Netherlands', 'flag': '🇳🇱', 'code': '+31'},
+    {'name': 'Switzerland', 'flag': '🇨🇭', 'code': '+41'},
+    {'name': 'Sweden', 'flag': '🇸🇪', 'code': '+46'},
+    {'name': 'Norway', 'flag': '🇳🇴', 'code': '+47'},
+    {'name': 'Ireland', 'flag': '🇮🇪', 'code': '+353'},
+    {'name': 'Portugal', 'flag': '🇵🇹', 'code': '+351'},
+    {'name': 'Greece', 'flag': '🇬🇷', 'code': '+30'},
+    {'name': 'Poland', 'flag': '🇵🇱', 'code': '+48'},
+    {'name': 'Ukraine', 'flag': '🇺🇦', 'code': '+380'},
+    {'name': 'Russia', 'flag': '🇷🇺', 'code': '+7'},
+    {'name': 'South Africa', 'flag': '🇿🇦', 'code': '+27'},
+    {'name': 'Nigeria', 'flag': '🇳🇬', 'code': '+234'},
+    {'name': 'Kenya', 'flag': '🇰🇪', 'code': '+254'},
+    {'name': 'Egypt', 'flag': '🇪🇬', 'code': '+20'},
+    {'name': 'Morocco', 'flag': '🇲🇦', 'code': '+212'},
+    {'name': 'Ghana', 'flag': '🇬🇭', 'code': '+233'},
+    {'name': 'Brazil', 'flag': '🇧🇷', 'code': '+55'},
+    {'name': 'Mexico', 'flag': '🇲🇽', 'code': '+52'},
+    {'name': 'Argentina', 'flag': '🇦🇷', 'code': '+54'},
+    {'name': 'Chile', 'flag': '🇨🇱', 'code': '+56'},
+    {'name': 'Colombia', 'flag': '🇨🇴', 'code': '+57'},
+    {'name': 'Peru', 'flag': '🇵🇪', 'code': '+51'},
+    {'name': 'Israel', 'flag': '🇮🇱', 'code': '+972'},
+    {'name': 'Qatar', 'flag': '🇶🇦', 'code': '+974'},
+    {'name': 'Kuwait', 'flag': '🇰🇼', 'code': '+965'},
+    {'name': 'Oman', 'flag': '🇴🇲', 'code': '+968'},
+    {'name': 'Bahrain', 'flag': '🇧🇭', 'code': '+973'},
+    {'name': 'Jordan', 'flag': '🇯🇴', 'code': '+962'},
+    {'name': 'Afghanistan', 'flag': '🇦🇫', 'code': '+93'},
+    {'name': 'Iran', 'flag': '🇮🇷', 'code': '+98'},
+    {'name': 'Hong Kong', 'flag': '🇭🇰', 'code': '+852'},
+    {'name': 'Taiwan', 'flag': '🇹🇼', 'code': '+886'},
+    {'name': 'Myanmar', 'flag': '🇲🇲', 'code': '+95'},
+    {'name': 'Cambodia', 'flag': '🇰🇭', 'code': '+855'},
+    {'name': 'Ethiopia', 'flag': '🇪🇹', 'code': '+251'},
+    {'name': 'Tanzania', 'flag': '🇹🇿', 'code': '+255'},
+    {'name': 'Uganda', 'flag': '🇺🇬', 'code': '+256'},
+    {'name': 'Algeria', 'flag': '🇩🇿', 'code': '+213'},
+    {'name': 'Tunisia', 'flag': '🇹🇳', 'code': '+216'},
+    {'name': 'Iceland', 'flag': '🇮🇸', 'code': '+354'},
+    {'name': 'Finland', 'flag': '🇫🇮', 'code': '+358'},
+    {'name': 'Austria', 'flag': '🇦🇹', 'code': '+43'},
+    {'name': 'Belgium', 'flag': '🇧🇪', 'code': '+32'},
+    {'name': 'Czechia', 'flag': '🇨🇿', 'code': '+420'},
+    {'name': 'Romania', 'flag': '🇷🇴', 'code': '+40'},
+    {'name': 'Hungary', 'flag': '🇭🇺', 'code': '+36'},
+    {'name': 'Croatia', 'flag': '🇭🇷', 'code': '+385'},
+    {'name': 'Serbia', 'flag': '🇷🇸', 'code': '+381'},
+    {'name': 'Kazakhstan', 'flag': '🇰🇿', 'code': '+7'},
+    {'name': 'Uzbekistan', 'flag': '🇺🇿', 'code': '+998'},
+    {'name': 'Georgia', 'flag': '🇬🇪', 'code': '+995'},
+    {'name': 'Armenia', 'flag': '🇦🇲', 'code': '+374'},
+    {'name': 'Azerbaijan', 'flag': '🇦🇿', 'code': '+994'},
+    {'name': 'Maldives', 'flag': '🇲🇻', 'code': '+960'},
+    {'name': 'Bhutan', 'flag': '🇧🇹', 'code': '+975'},
+    {'name': 'Mauritius', 'flag': '🇲🇺', 'code': '+230'},
+    {'name': 'Fiji', 'flag': '🇫🇯', 'code': '+679'},
+  ];
+
+  Future<void> _showCountryPicker() async {
+    final searchController = TextEditingController();
+    final selected = await showModalBottomSheet<Map<String, String>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: _cream,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          final query = searchController.text.trim().toLowerCase();
+          final filtered = _countries.where((country) {
+            return country['name']!.toLowerCase().contains(query) ||
+                country['code']!.toLowerCase().contains(query);
+          }).toList();
+
+          return SafeArea(
+            child: SizedBox(
+              height: MediaQuery.sizeOf(context).height * .78,
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
+                    child: Row(
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            'Choose country',
+                            style: TextStyle(
+                              color: _ink,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.pop(context),
+                          icon: const Icon(Icons.close, color: _ink),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: TextField(
+                      controller: searchController,
+                      onChanged: (_) => setSheetState(() {}),
+                      decoration: InputDecoration(
+                        hintText: 'Search country or calling code',
+                        prefixIcon: const Icon(Icons.search),
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: filtered.isEmpty
+                        ? const Center(child: Text('No countries found'))
+                        : ListView.builder(
+                            itemCount: filtered.length,
+                            itemBuilder: (context, index) {
+                              final country = filtered[index];
+                              return ListTile(
+                                leading: Text(
+                                  country['flag']!,
+                                  style: const TextStyle(fontSize: 25),
+                                ),
+                                title: Text(
+                                  country['name']!,
+                                  style: const TextStyle(color: _ink),
+                                ),
+                                trailing: Text(
+                                  country['code']!,
+                                  style: const TextStyle(
+                                    color: _darkGold,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                onTap: () => Navigator.pop(context, country),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+    searchController.dispose();
+
+    if (selected != null && mounted) {
+      setState(() {
+        _countryCode = selected['code']!;
+        _countryFlag = selected['flag']!;
+      });
+    }
+  }
 
   Future<void> _verify() {
     final id = _verificationId;
@@ -86,11 +290,24 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 26),
+              padding: EdgeInsets.fromLTRB(
+                20,
+                size.height < 700 ? 4 : 12,
+                20,
+                size.height < 700 ? 8 : 18,
+              ),
               child: Column(
                 children: [
                   SizedBox(
-                    height: size.height < 750 ? 260 : 315,
+                    height: size.height < 650
+                        ? 180
+                        : size.height < 700
+                        ? 205
+                        : size.height < 750
+                        ? 235
+                        : size.height < 850
+                        ? 275
+                        : 315,
                     child: Stack(
                       children: [
                         Positioned(
@@ -294,31 +511,40 @@ class _LoginScreenState extends State<LoginScreen> {
                             fontWeight: FontWeight.w600,
                           ),
                           decoration: InputDecoration(
-                            prefixIcon: const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 12),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text('🇮🇳', style: TextStyle(fontSize: 22)),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    '+91',
-                                    style: TextStyle(
-                                      color: _ink,
-                                      fontWeight: FontWeight.bold,
+                            prefixIcon: InkWell(
+                              onTap: _showCountryPicker,
+                              borderRadius: BorderRadius.circular(20),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      _countryFlag,
+                                      style: const TextStyle(fontSize: 22),
                                     ),
-                                  ),
-                                  SizedBox(width: 10),
-                                  Icon(
-                                    Icons.keyboard_arrow_down,
-                                    color: _darkGold,
-                                  ),
-                                  SizedBox(width: 8),
-                                  SizedBox(
-                                    height: 30,
-                                    child: VerticalDivider(),
-                                  ),
-                                ],
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      _countryCode,
+                                      style: const TextStyle(
+                                        color: _ink,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    const Icon(
+                                      Icons.keyboard_arrow_down,
+                                      color: _darkGold,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    const SizedBox(
+                                      height: 30,
+                                      child: VerticalDivider(),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                             hintText: 'Phone number',
@@ -382,19 +608,30 @@ class _LoginScreenState extends State<LoginScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(
-                              Icons.check_circle,
-                              size: 18,
-                              color: _darkGold,
+                            Checkbox(
+                              value: _agreedToTerms,
+                              onChanged: (value) {
+                                setState(() => _agreedToTerms = value ?? false);
+                              },
+                              activeColor: _darkGold,
+                              checkColor: Colors.white,
+                              visualDensity: VisualDensity.compact,
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
                             ),
-                            const SizedBox(width: 7),
-                            Flexible(
-                              child: Text(
-                                "I agree to Oyaroo's Terms of Service and Privacy Policy",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 10.5,
-                                  color: _ink.withValues(alpha: .75),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () => setState(
+                                  () => _agreedToTerms = !_agreedToTerms,
+                                ),
+                                child: Text(
+                                  "I agree to Oyaroo's Terms of Service and Privacy Policy",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 10.5,
+                                    color: _ink.withValues(alpha: .75),
+                                  ),
                                 ),
                               ),
                             ),
@@ -403,7 +640,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 25),
+                  SizedBox(height: size.height < 700 ? 12 : 25),
                   Container(
                     height: 2,
                     decoration: const BoxDecoration(
