@@ -291,9 +291,6 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           SafeArea(
             child: SingleChildScrollView(
-              physics: MediaQuery.viewInsetsOf(context).bottom == 0
-                  ? const NeverScrollableScrollPhysics()
-                  : const ClampingScrollPhysics(),
               padding: EdgeInsets.fromLTRB(
                 20,
                 size.height < 700 ? 4 : 12,
@@ -436,7 +433,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.fromLTRB(16, 18, 16, 20),
+                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFFFCF7).withValues(alpha: .96),
                       borderRadius: BorderRadius.circular(32),
@@ -460,7 +457,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           subtitle: 'Continue with Google',
                           onTap: () => _run(_auth.google),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 8),
                         _socialButton(
                           icon: Icons.apple,
                           title: 'Apple se login',
@@ -471,7 +468,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             'Apple login is not configured yet.',
                           ),
                         ),
-                        const SizedBox(height: 21),
+                        const SizedBox(height: 13),
                         Row(
                           children: [
                             Expanded(
@@ -506,7 +503,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 18),
+                        const SizedBox(height: 12),
                         TextField(
                           controller: _phone,
                           keyboardType: TextInputType.phone,
@@ -597,7 +594,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                         ],
-                        const SizedBox(height: 14),
+                        const SizedBox(height: 8),
                         _goldButton(
                           label: _verificationId == null
                               ? '➤   OTP bhejo'
@@ -609,7 +606,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ? _sendOtp
                               : _verify,
                         ),
-                        const SizedBox(height: 18),
+                        const SizedBox(height: 10),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -645,7 +642,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ],
                     ),
                   ),
-                  SizedBox(height: size.height < 700 ? 12 : 25),
+                  SizedBox(height: size.height < 700 ? 6 : 12),
                   Container(
                     height: 2,
                     decoration: const BoxDecoration(
@@ -717,8 +714,8 @@ class _LoginScreenState extends State<LoginScreen> {
         borderRadius: BorderRadius.circular(25),
         onTap: _busy ? null : onTap,
         child: Container(
-          height: 76,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          height: 66,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(25),
             border: Border.all(
@@ -753,7 +750,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Text(
                       subtitle,
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 10,
                         color: dark ? Colors.white70 : Colors.black54,
                       ),
                     ),
@@ -775,7 +772,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }) {
     return SizedBox(
       width: double.infinity,
-      height: 58,
+      height: 52,
       child: DecoratedBox(
         decoration: BoxDecoration(
           gradient: const LinearGradient(
@@ -859,16 +856,16 @@ class _Feature extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     children: [
       Container(
-        width: 58,
-        height: 58,
+        width: 46,
+        height: 46,
         decoration: BoxDecoration(
           color: color,
           shape: BoxShape.circle,
           border: Border.all(color: Colors.white, width: 2),
         ),
-        child: Icon(icon, color: iconColor, size: 29),
+        child: Icon(icon, color: iconColor, size: 23),
       ),
-      const SizedBox(height: 9),
+      const SizedBox(height: 4),
       Text(
         title,
         textAlign: TextAlign.center,
@@ -882,7 +879,7 @@ class _Feature extends StatelessWidget {
       Text(
         subtitle,
         textAlign: TextAlign.center,
-        style: TextStyle(color: _ink.withValues(alpha: .62), fontSize: 9),
+        style: TextStyle(color: _ink.withValues(alpha: .62), fontSize: 8),
       ),
     ],
   );
