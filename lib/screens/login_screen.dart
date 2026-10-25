@@ -300,13 +300,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   SizedBox(
                     height: size.height < 650
-                        ? 180
+                        ? 225
                         : size.height < 700
-                        ? 205
+                        ? 245
                         : size.height < 750
-                        ? 235
+                        ? 265
                         : size.height < 850
-                        ? 275
+                        ? 290
                         : 315,
                     child: Stack(
                       children: [
@@ -314,11 +314,11 @@ class _LoginScreenState extends State<LoginScreen> {
                           right: -12,
                           top: 5,
                           bottom: 0,
-                          width: size.width * .59,
+                          width: size.width * .54,
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(140),
                             child: Image.asset(
-                              'assets/discover/default_avatar.png',
+                              'assets/discover/oyaroo_couple.png',
                               fit: BoxFit.cover,
                               errorBuilder: (_, _, _) => Container(
                                 decoration: const BoxDecoration(
@@ -363,7 +363,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         Positioned(
                           left: 0,
-                          top: 112,
+                          top: 92,
+                          right: size.width * .52,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
