@@ -269,6 +269,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final size = MediaQuery.sizeOf(context);
     return Scaffold(
       backgroundColor: _cream,
+      resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
           Positioned(
@@ -290,6 +291,9 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           SafeArea(
             child: SingleChildScrollView(
+              physics: MediaQuery.viewInsetsOf(context).bottom == 0
+                  ? const NeverScrollableScrollPhysics()
+                  : const ClampingScrollPhysics(),
               padding: EdgeInsets.fromLTRB(
                 20,
                 size.height < 700 ? 4 : 12,
