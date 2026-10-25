@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:oyaroo/core/result.dart';
+import 'package:oyaroo/core/country_data.dart';
+import 'package:oyaroo/services/user_service.dart';
 import 'package:oyaroo/core/ui.dart';
 import 'package:oyaroo/handlers/room_handler.dart';
 import 'package:oyaroo/screens/room_screen.dart';
@@ -83,44 +85,82 @@ class _DashboardScreenState extends State<DashboardScreen> {
     children: [
       const SizedBox(height: 4),
       _AutoSlideStrip(
-        count: 9,
-        height: 142,
-        builder: (_, index) => _BannerPlaceholder(index: index),
-      ),
-      const SizedBox(height: 8),
-      _AutoSlideStrip(
-        count: 5,
-        height: 108,
-        viewportFraction: .84,
-        builder: (_, index) => _FeaturePlaceholder(
-          title: 'Ranking',
-          index: index,
-          icon: Icons.emoji_events_rounded,
-          colors: const [Color(0xFFFFD66B), Color(0xFFFFA63A)],
-        ),
+        count: 8,
+        height: 126,
+        viewportFraction: 1,
+        builder: (_, index) {
+          const banners = [
+            'assets/discover/events/recharge_event.png',
+            'assets/discover/events/cp_star.png',
+            'assets/discover/events/offline_recharge.png',
+            'assets/discover/events/vip_exclusive_benefits.png',
+            'assets/discover/events/weekly_party_star.png',
+            'assets/discover/events/customised_gift_star.png',
+            'assets/discover/events/room_support.png',
+            'assets/discover/events/pk_battle.png',
+          ];
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Image.asset(
+                banners[index],
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const ColoredBox(
+                  color: Color(0xFFFFD36B),
+                  child: Center(child: Icon(Icons.image_not_supported)),
+                ),
+              ),
+            ),
+          );
+        },
       ),
       const SizedBox(height: 6),
-      _AutoSlideStrip(
-        count: 5,
-        height: 108,
-        viewportFraction: .84,
-        builder: (_, index) => _FeaturePlaceholder(
-          title: 'CP',
-          index: index,
-          icon: Icons.favorite_rounded,
-          colors: const [Color(0xFFFFB5CE), Color(0xFFE975A8)],
-        ),
-      ),
-      const SizedBox(height: 6),
-      _AutoSlideStrip(
-        count: 5,
-        height: 108,
-        viewportFraction: .84,
-        builder: (_, index) => _FeaturePlaceholder(
-          title: 'Family',
-          index: index,
-          icon: Icons.groups_rounded,
-          colors: const [Color(0xFFA9E9D9), Color(0xFF50BDA5)],
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: Row(
+          children: [
+            Expanded(
+              child: _AutoSlideStrip(
+                count: 5,
+                height: 78,
+                viewportFraction: 1,
+                builder: (_, index) => _FeaturePlaceholder(
+                  title: 'Ranking',
+                  index: index,
+                  icon: Icons.emoji_events_rounded,
+                  colors: const [Color(0xFFFFD66B), Color(0xFFFFA63A)],
+                ),
+              ),
+            ),
+            Expanded(
+              child: _AutoSlideStrip(
+                count: 5,
+                height: 78,
+                viewportFraction: 1,
+                builder: (_, index) => _FeaturePlaceholder(
+                  title: 'CP',
+                  index: index,
+                  icon: Icons.favorite_rounded,
+                  colors: const [Color(0xFFFFB5CE), Color(0xFFE975A8)],
+                ),
+              ),
+            ),
+            Expanded(
+              child: _AutoSlideStrip(
+                count: 5,
+                height: 78,
+                viewportFraction: 1,
+                builder: (_, index) => _FeaturePlaceholder(
+                  title: 'Family',
+                  index: index,
+                  icon: Icons.groups_rounded,
+                  colors: const [Color(0xFFA9E9D9), Color(0xFF50BDA5)],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
       const SizedBox(height: 12),
@@ -199,7 +239,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               crossAxisCount: 2,
               mainAxisSpacing: 12,
               crossAxisSpacing: 12,
-              childAspectRatio: .82,
+              childAspectRatio: .76,
             ),
             itemCount: filtered.length,
             itemBuilder: (_, i) => _roomCard(filtered[i]),
@@ -244,64 +284,117 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _roomCard(QueryDocumentSnapshot<Map<String, dynamic>> d) {
     final data = d.data();
     final live = RoomService.occupiedCount(data);
+    final hostUid = '${data['hostUid'] ?? ''}';
+
     return GestureDetector(
       onTap: () => _openRoom(d.id),
       child: Container(
+        clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
+          color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(
-            colors: [Colors.amber.shade300, Colors.deepPurple.shade300],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Stack(
-          children: [
-            const Center(
-              child: Icon(Icons.graphic_eq, size: 48, color: Colors.white),
-            ),
-            Positioned(
-              top: 8,
-              right: 8,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.black54,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '🎙 $live',
-                  style: const TextStyle(color: Colors.white, fontSize: 12),
-                ),
-              ),
-            ),
-            Positioned(
-              left: 10,
-              right: 10,
-              bottom: 10,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${data['name'] ?? ''}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                    ),
-                  ),
-                  Text(
-                    'Host: ${data['hostName'] ?? ''}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Colors.white70, fontSize: 12),
-                  ),
-                ],
-              ),
+          border: Border.all(color: const Color(0xFFFFE5A0)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.brown.withValues(alpha: .08),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
             ),
           ],
+        ),
+        child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+          stream: hostUid.isEmpty
+              ? const Stream<DocumentSnapshot<Map<String, dynamic>>>.empty()
+              : UserService.profileStream(hostUid),
+          builder: (context, profileSnap) {
+            final profile = profileSnap.data?.data() ?? <String, dynamic>{};
+            final photoUrl = '${profile['photoUrl'] ?? ''}'.trim();
+            final country = '${profile['country'] ?? ''}'.trim();
+            final matches = oyarooCountries.where(
+              (c) => c['name']?.toLowerCase() == country.toLowerCase(),
+            );
+            final flag = matches.isEmpty ? '' : (matches.first['flag'] ?? '');
+
+            Widget fallbackPhoto() => Image.asset(
+              'assets/discover/default_avatar.png',
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) => const Center(
+                child: Icon(
+                  Icons.graphic_eq_rounded,
+                  size: 48,
+                  color: Color(0xFFB69B67),
+                ),
+              ),
+            );
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: Container(
+                    color: const Color(0xFFFFF7E4),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        if (photoUrl.isNotEmpty)
+                          Image.network(
+                            photoUrl,
+                            fit: BoxFit.contain,
+                            errorBuilder: (_, __, ___) => fallbackPhoto(),
+                          )
+                        else
+                          fallbackPhoto(),
+                        Positioned(
+                          top: 7,
+                          right: 7,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: .65),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '🎙 $live',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(9, 7, 9, 9),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '${data['name'] ?? ''}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Color(0xFF382A17),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                      if (flag.isNotEmpty) ...[
+                        const SizedBox(width: 5),
+                        Text(flag, style: const TextStyle(fontSize: 17)),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
