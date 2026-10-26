@@ -129,7 +129,13 @@ class _RoomScreenState extends State<RoomScreen> {
         showFailure(context, taken);
         return;
       }
-      await _mic.startPublishing();
+      final publishing = await _mic.startPublishing();
+      if (!mounted) return;
+      if (publishing is Err<void>) {
+        await _do(() => _seat.setMyMuted(widget.roomId, true));
+        if (mounted) showFailure(context, publishing);
+        return;
+      }
       await _do(() => _seat.setMyMuted(widget.roomId, !_mic.micOn));
     } else if (isHost && index > 0) {
       _hostSeatMenu(index, seat);
@@ -171,6 +177,7 @@ class _RoomScreenState extends State<RoomScreen> {
     if (!mounted) return;
     setState(() {});
     showFailure(context, r);
+    if (r is Err<void>) return;
     await _do(() => _seat.setMyMuted(widget.roomId, !_mic.micOn));
   }
 

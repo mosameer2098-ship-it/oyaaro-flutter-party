@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:oyaroo/core/result.dart';
 import 'package:oyaroo/core/country_data.dart';
@@ -400,55 +401,196 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _mineTab() => Column(
-    children: [
-      Expanded(
-        child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-          stream: RoomService.myRooms(),
-          builder: (context, snap) {
-            if (!snap.hasData) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            final docs = snap.data!.docs;
-            if (docs.isEmpty) {
-              return const Center(
-                child: Text(
-                  'Aapka koi room nahi hai.\nNeeche se naya room banayein.',
-                  textAlign: TextAlign.center,
-                ),
-              );
-            }
-            return ListView(
-              children: docs.map((d) {
-                final data = d.data();
-                return ListTile(
-                  leading: const CircleAvatar(child: Icon(Icons.mic)),
-                  title: Text('${data['name'] ?? ''}'),
-                  subtitle: Text(
-                    'Live: ${RoomService.occupiedCount(data)} log',
+  int _mineSubTab = 0;
+
+  Widget _mineTab() => StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+    stream: RoomService.myRooms(),
+    builder: (context, roomSnap) {
+      if (roomSnap.hasError) {
+        return const Center(child: Text('Aapka room load nahi ho paaya.'));
+      }
+      if (!roomSnap.hasData) {
+        return const Center(child: CircularProgressIndicator());
+      }
+
+      final rooms = roomSnap.data!.docs;
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+
+      return Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 4),
+            child: rooms.isEmpty
+                ? SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _createRoom,
+                      icon: const Icon(Icons.add),
+                      label: const Text('Create Room'),
+                    ),
+                  )
+                : Card(
+                    child: ListTile(
+                      leading: const CircleAvatar(child: Icon(Icons.mic)),
+                      title: Text(
+                        (rooms.first.data()['name'] ?? 'My Room').toString(),
+                      ),
+                      subtitle: Text(
+                        'Your room · ${RoomService.occupiedCount(rooms.first.data())} log',
+                      ),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => _openRoom(rooms.first.id),
+                    ),
                   ),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => _openRoom(d.id),
-                );
-              }).toList(),
-            );
-          },
-        ),
-      ),
-      SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: _createRoom,
-              icon: const Icon(Icons.add),
-              label: const Text('Naya room banao'),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                TextButton(
+                  onPressed: () => setState(() => _mineSubTab = 0),
+                  child: Text(
+                    'Recently',
+                    style: TextStyle(
+                      fontWeight: _mineSubTab == 0
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                TextButton(
+                  onPressed: () => setState(() => _mineSubTab = 1),
+                  child: Text(
+                    'Follow',
+                    style: TextStyle(
+                      fontWeight: _mineSubTab == 1
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-        ),
-      ),
-    ],
+          Expanded(
+            child: uid == null
+                ? const Center(child: Text('Login karke rooms dekhein.'))
+                : _mineSubTab == 0
+                ? _recentlyVisitedMine(uid)
+                : _followedMine(uid),
+          ),
+        ],
+      );
+    },
+  );
+
+  Widget _recentlyVisitedMine(String uid) =>
+      StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(uid)
+            .collection('recent_rooms')
+            .orderBy('visitedAt', descending: true)
+            .limit(20)
+            .snapshots(),
+        builder: (context, snap) {
+          if (snap.hasError) {
+            return const Center(
+              child: Text('Recently rooms load nahi ho paaye.'),
+            );
+          }
+          if (!snap.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final docs = snap.data!.docs;
+          if (docs.isEmpty) {
+            return const Center(
+              child: Text('Abhi koi recently visited room nahi hai.'),
+            );
+          }
+          return ListView(
+            children: docs.map((doc) {
+              final data = doc.data();
+              final id = (data['roomId'] ?? doc.id).toString();
+              return ListTile(
+                leading: const Icon(Icons.history),
+                title: Text((data['roomName'] ?? 'Room').toString()),
+                subtitle: const Text('Recently visited'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => _openRoom(id),
+              );
+            }).toList(),
+          );
+        },
+      );
+
+  Widget _followedMine(
+    String uid,
+  ) => StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+    stream: FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('following')
+        .snapshots(),
+    builder: (context, snap) {
+      if (snap.hasError) {
+        return const Center(child: Text('Follow list load nahi ho paayi.'));
+      }
+      if (!snap.hasData) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      final docs = snap.data!.docs;
+      if (docs.isEmpty) {
+        return const Center(
+          child: Text('Abhi aapne kisi ko follow nahi kiya.'),
+        );
+      }
+      return ListView(
+        children: docs.map((doc) {
+          final followedUid = doc.id;
+          return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+            stream: FirebaseFirestore.instance
+                .collection('users')
+                .doc(followedUid)
+                .snapshots(),
+            builder: (context, profileSnap) {
+              final profile = profileSnap.data?.data();
+              final roomId = profile?['currentRoomId']?.toString();
+              if (profile == null || roomId == null || roomId.isEmpty) {
+                return const SizedBox.shrink();
+              }
+              return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                stream: RoomService.roomStream(roomId),
+                builder: (context, roomSnap) {
+                  final room = roomSnap.data?.data();
+                  if (room == null) return const SizedBox.shrink();
+                  final seats = (room['seats'] as List?) ?? [];
+                  final onMic = seats.any(
+                    (seat) =>
+                        seat is Map && seat['uid']?.toString() == followedUid,
+                  );
+                  return ListTile(
+                    leading: const Icon(Icons.account_circle_outlined),
+                    title: Text(
+                      (profile['name'] ?? profile['displayName'] ?? 'User')
+                          .toString(),
+                    ),
+                    subtitle: Text(
+                      '${room['name'] ?? 'Voice room'} · ${onMic ? 'On Mic' : 'On Room'}',
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => _openRoom(roomId),
+                  );
+                },
+              );
+            },
+          );
+        }).toList(),
+      );
+    },
   );
 
   @override

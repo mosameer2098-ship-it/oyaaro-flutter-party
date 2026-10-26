@@ -123,20 +123,85 @@ class RoomService {
     if (cleanName.isEmpty) {
       throw const AppException('Room ka naam khali nahi ho sakta');
     }
-    final doc = await _rooms.add({
-      'name': cleanName,
-      'nameLower': cleanName.toLowerCase(),
-      'hostUid': _me.uid,
-      'hostName': _me.displayName ?? 'Host',
-      'seatCount': Catalog.maxSeats,
-      'seats': List.generate(
-        Catalog.maxSeats,
-        (i) => i == 0
-            ? {'uid': _me.uid, 'name': _me.displayName ?? 'Host', 'muted': true}
-            : _emptySeat(),
-      ),
+
+    final user = _me;
+    final claimRef = _db.collection('room_claims').doc(user.uid);
+    final hostName = user.displayName ?? 'Host';
+
+    // Read existing rooms before the transaction; verify the selected room
+    // again inside the transaction before permanently claiming it.
+    final existingRooms = await _rooms
+        .where('hostUid', isEqualTo: user.uid)
+        .limit(1)
+        .get();
+
+    final existingRoomRef = existingRooms.docs.isEmpty
+        ? null
+        : existingRooms.docs.first.reference;
+    final newRoomRef = _rooms.doc();
+
+    return _db.runTransaction<String>((tx) async {
+      final claim = await tx.get(claimRef);
+
+      if (claim.exists) {
+        final data = claim.data();
+        final claimedRoomId = data?['roomId']?.toString();
+        if (data?['ownerUid'] != user.uid ||
+            claimedRoomId == null ||
+            claimedRoomId.isEmpty) {
+          throw const AppException(
+            'Aapki permanent room entry mein problem hai. Support se sampark karein.',
+          );
+        }
+
+        final claimedRoom = await tx.get(_rooms.doc(claimedRoomId));
+        if (!claimedRoom.exists || claimedRoom.data()?['hostUid'] != user.uid) {
+          throw const AppException(
+            'Aapki permanent room verify nahi ho saki. Support se sampark karein.',
+          );
+        }
+        return claimedRoomId;
+      }
+
+      String roomId;
+      if (existingRoomRef != null) {
+        final existingRoom = await tx.get(existingRoomRef);
+        if (!existingRoom.exists ||
+            existingRoom.data()?['hostUid'] != user.uid) {
+          throw const AppException(
+            'Existing room verify nahi ho saki. Dobara try karein.',
+          );
+        }
+        roomId = existingRoom.id;
+      } else {
+        roomId = newRoomRef.id;
+      }
+
+      // Claim and new room are committed atomically.
+      tx.set(claimRef, {
+        'ownerUid': user.uid,
+        'roomId': roomId,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      if (existingRoomRef == null) {
+        tx.set(newRoomRef, {
+          'name': cleanName,
+          'nameLower': cleanName.toLowerCase(),
+          'hostUid': user.uid,
+          'hostName': hostName,
+          'seatCount': Catalog.maxSeats,
+          'seats': List.generate(
+            Catalog.maxSeats,
+            (i) => i == 0
+                ? {'uid': user.uid, 'name': hostName, 'muted': true}
+                : _emptySeat(),
+          ),
+        });
+      }
+
+      return roomId;
     });
-    return doc.id;
   }
 
   static Future<void> sendMessage(
