@@ -1,8 +1,8 @@
-name: Oyaaro Android APK
+name: Oyaaro Stage A Validation
 
 on:
   push:
-    branches: [main]
+    branches: [stage-a-validation]
   workflow_dispatch:
 
 permissions:
@@ -21,11 +21,17 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Create Flutter platform scaffolding
+      - name: Create Android platform scaffolding
         run: flutter create --project-name oyaaro_party --org com.oyaaro --platforms=android .
 
       - name: Resolve dependencies
         run: flutter pub get
+
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed lib test
+
+      - name: Analyze
+        run: flutter analyze
 
       - name: Run tests
         run: flutter test
