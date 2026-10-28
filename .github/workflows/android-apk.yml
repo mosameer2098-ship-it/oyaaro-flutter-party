@@ -23,6 +23,8 @@ jobs:
 
       - name: Create Android platform scaffolding
         run: flutter create --project-name oyaaro_party --org com.oyaaro --platforms=android .
+      - name: Remove generated counter-app test
+        run: rm -f test/widget_test.dart
 
       - name: Resolve dependencies
         run: flutter pub get
