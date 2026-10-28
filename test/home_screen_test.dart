@@ -39,7 +39,10 @@ void main() {
   testWidgets('Video/Music filter shows only music rooms', (tester) async {
     await pumpHome(tester);
 
-    await tester.tap(find.byKey(const ValueKey('category-videoMusic')));
+    final videoMusicChip = find.byKey(const ValueKey('category-videoMusic'));
+    await tester.ensureVisible(videoMusicChip);
+    await tester.pumpAndSettle();
+    await tester.tap(videoMusicChip);
     await tester.pumpAndSettle();
 
     expect(find.text('Music Addicts'), findsOneWidget);

@@ -132,7 +132,7 @@ class _HomeHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(22, 13, 22, 10),
+      padding: const EdgeInsets.fromLTRB(12, 13, 8, 10),
       child: Row(
         children: [
           _TopTab(
@@ -141,7 +141,7 @@ class _HomeHeader extends StatelessWidget {
             selected: tab == HomeTab.mine,
             onTap: () => onTabSelected(HomeTab.mine),
           ),
-          const SizedBox(width: 34),
+          const SizedBox(width: 16),
           _TopTab(
             key: const ValueKey('home-tab-popular'),
             label: 'Popular',
@@ -152,12 +152,18 @@ class _HomeHeader extends StatelessWidget {
           IconButton(
             tooltip: 'Search',
             onPressed: onSearch,
-            icon: const Icon(Icons.search_rounded, size: 27),
+            padding: EdgeInsets.zero,
+            visualDensity: VisualDensity.compact,
+            constraints: const BoxConstraints.tightFor(width: 38, height: 40),
+            icon: const Icon(Icons.search_rounded, size: 25),
           ),
           IconButton(
             tooltip: 'Notifications',
             onPressed: onNotifications,
-            icon: const Icon(Icons.notifications_none_rounded, size: 26),
+            padding: EdgeInsets.zero,
+            visualDensity: VisualDensity.compact,
+            constraints: const BoxConstraints.tightFor(width: 38, height: 40),
+            icon: const Icon(Icons.notifications_none_rounded, size: 24),
           ),
         ],
       ),

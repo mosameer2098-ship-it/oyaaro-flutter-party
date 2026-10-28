@@ -43,7 +43,7 @@ class CategoryFilterBar extends StatelessWidget {
                   color: OyaaroColors.ink,
                   fontWeight: FontWeight.w700,
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 22),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
               ),
             ),
         ],

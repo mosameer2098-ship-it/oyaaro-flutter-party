@@ -22,7 +22,8 @@ void main() {
     expect(tester.getTopLeft(find.text('Ranking')).dx, lessThan(390));
     expect(tester.getTopLeft(find.text('CP')).dx, lessThan(390));
     expect(tester.getTopLeft(find.text('Family')).dx, lessThan(390));
-    expect(tester.getTopLeft(find.text('Stars')).dx, greaterThan(390));
+    // ListView.builder lazily builds cards near the viewport.
+    expect(find.text('Stars'), findsNothing);
 
     await tester.pumpWidget(const SizedBox.shrink());
   });
