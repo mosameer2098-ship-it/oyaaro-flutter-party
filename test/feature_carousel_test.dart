@@ -12,7 +12,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     await tester.pumpWidget(
-      MaterialApp(
+      const MaterialApp(
         home: Scaffold(
           body: FeatureCarousel(items: sampleFeatures),
         ),
@@ -35,11 +35,11 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     await tester.pumpWidget(
-      MaterialApp(
+      const MaterialApp(
         home: Scaffold(
           body: FeatureCarousel(
             items: sampleFeatures,
-            interval: const Duration(seconds: 2),
+            interval: Duration(seconds: 2),
           ),
         ),
       ),

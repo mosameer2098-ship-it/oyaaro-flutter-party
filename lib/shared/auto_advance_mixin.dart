@@ -33,7 +33,7 @@ mixin AutoAdvanceMixin<T extends StatefulWidget>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _tickerEnabled = TickerMode.of(context);
+    _tickerEnabled = TickerMode.valuesOf(context).enabled;
     _syncAutoAdvance();
   }
 
